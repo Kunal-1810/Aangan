@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { Property } from '../models.js';
+import { Property, Inquiry } from '../models.js';
 import { requireAuth, requireRole } from '../auth.js';
 
 const r = Router();
-const FIELDS = ['title', 'description', 'listingType', 'propertyType', 'price', 'bedrooms', 'bathrooms', 'areaSqft', 'furnished', 'city', 'locality', 'images'];
+const FIELDS = ['title', 'description', 'listingType', 'propertyType', 'price', 'bedrooms', 'bathrooms', 'areaSqft', 'furnished', 'city', 'locality', 'images', 'lat', 'lng'];
 const pick = body => Object.fromEntries(FIELDS.filter(k => body[k] !== undefined).map(k => [k, body[k]]));
 const escapeRegex = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const canEdit = (doc, user) => String(doc.owner) === String(user._id) || user.role === 'admin';
@@ -61,6 +61,24 @@ r.delete('/:id', requireAuth, async (req, res) => {
   if (!canEdit(doc, req.user)) return res.status(403).json({ error: 'You can only delete your own listings' });
   await doc.deleteOne();
   res.json({ ok: true });
+});
+
+// Inquiries: signed-in users message the owner; owners read them on their listing
+r.post('/:id/inquiries', requireAuth, async (req, res) => {
+  const message = String(req.body.message || '').trim();
+  if (message.length < 5) return res.status(400).json({ error: 'Write a message of at least 5 characters' });
+  const doc = await Property.findById(req.params.id);
+  if (!doc) return res.status(404).json({ error: 'Property not found' });
+  if (String(doc.owner) === String(req.user._id)) return res.status(400).json({ error: 'You cannot message your own listing' });
+  await Inquiry.create({ property: doc._id, sender: req.user._id, message: message.slice(0, 1000) });
+  res.status(201).json({ ok: true });
+});
+
+r.get('/:id/inquiries', requireAuth, async (req, res) => {
+  const doc = await Property.findById(req.params.id);
+  if (!doc) return res.status(404).json({ error: 'Property not found' });
+  if (!canEdit(doc, req.user)) return res.status(403).json({ error: 'Only the owner can read inquiries' });
+  res.json(await Inquiry.find({ property: doc._id }).sort({ createdAt: -1 }).populate('sender', 'name email'));
 });
 
 export default r;

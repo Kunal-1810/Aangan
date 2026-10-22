@@ -5,6 +5,7 @@ import { AuthCtx } from './auth.js';
 import Home from './pages/Home.jsx';
 import Auth from './pages/Auth.jsx';
 import PostProperty from './pages/PostProperty.jsx';
+import PropertyDetail from './pages/PropertyDetail.jsx';
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -46,6 +47,7 @@ export default function App() {
           <Route path="/login" element={<Auth mode="login" />} />
           <Route path="/register" element={<Auth mode="register" />} />
           <Route path="/post" element={<PostProperty />} />
+          <Route path="/property/:id" element={<PropertyDetail />} />
         </Routes>
       </main>
     </AuthCtx.Provider>

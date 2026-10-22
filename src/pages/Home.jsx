@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../api.js';
+import MapView from '../components/MapView.jsx';
 
 const inr = n => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n);
 const blank = { city: '', listingType: '', maxPrice: '', bedrooms: '', furnished: '', sort: 'newest' };
@@ -10,6 +12,7 @@ export default function Home() {
   const [page, setPage] = useState(1);
   const [data, setData] = useState({ items: [], total: 0, pages: 1 });
   const [state, setState] = useState('loading');
+  const [hover, setHover] = useState(null);
 
   useEffect(() => {
     setState('loading');
@@ -49,34 +52,41 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="results">
-        {state === 'loading' && <p className="muted">Loading listings…</p>}
-        {state === 'error' && <p className="error">Couldn't load listings. Check that the API is running and MONGODB_URI is set.</p>}
-        {state === 'ok' && data.items.length === 0 && <p className="muted">No properties match yet. Try a wider budget or another city.</p>}
-        {state === 'ok' && data.items.length > 0 && <p className="muted">{data.total} {data.total === 1 ? 'property' : 'properties'}</p>}
-        <div className="cards">
-          {data.items.map(p => (
-            <article className="card" key={p._id}>
-              {p.images?.[0] ? <img className="photo" src={p.images[0]} alt={p.title} /> : <div className="photo" aria-hidden="true" />}
-              <div className="body">
-                <b className="price">{inr(p.price)}{p.listingType === 'rent' && ' / mo'}</b>
-                <h2>{p.title}</h2>
-                <p className="muted">{[p.locality, p.city].filter(Boolean).join(', ')}</p>
-                <p className="meta">
-                  <span>{p.bedrooms} bed</span><span>{p.bathrooms} bath</span>
-                  {p.areaSqft && <span>{p.areaSqft} sq ft</span>}<span>{p.furnished}</span>
-                </p>
-              </div>
-            </article>
-          ))}
-        </div>
-        {data.pages > 1 && (
-          <div className="pager">
-            <button className="btn ghost" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button>
-            <span className="muted">Page {page} of {data.pages}</span>
-            <button className="btn ghost" disabled={page >= data.pages} onClick={() => setPage(page + 1)}>Next</button>
+      <section className="results layout">
+        <div>
+          {state === 'loading' && <p className="muted">Loading listings…</p>}
+          {state === 'error' && <p className="error">Couldn't load listings. Check that the API is running and MONGODB_URI is set.</p>}
+          {state === 'ok' && data.items.length === 0 && <p className="muted">No properties match yet. Try a wider budget or another city.</p>}
+          {state === 'ok' && data.items.length > 0 && <p className="muted">{data.total} {data.total === 1 ? 'property' : 'properties'}. The map shows this page.</p>}
+          <div className="cards">
+            {data.items.map(p => (
+              <article className="card" key={p._id} onMouseEnter={() => setHover(p._id)} onMouseLeave={() => setHover(null)}>
+                <Link to={`/property/${p._id}`} aria-label={p.title}>
+                  {p.images?.[0] ? <img className="photo" src={p.images[0]} alt="" /> : <div className="photo" aria-hidden="true" />}
+                </Link>
+                <div className="body">
+                  <b className="price">{inr(p.price)}{p.listingType === 'rent' && ' / mo'}</b>
+                  <h2><Link to={`/property/${p._id}`}>{p.title}</Link></h2>
+                  <p className="muted">{[p.locality, p.city].filter(Boolean).join(', ')}</p>
+                  <p className="meta">
+                    <span>{p.bedrooms} bed</span><span>{p.bathrooms} bath</span>
+                    {p.areaSqft && <span>{p.areaSqft} sq ft</span>}<span>{p.furnished}</span>
+                  </p>
+                </div>
+              </article>
+            ))}
           </div>
-        )}
+          {data.pages > 1 && (
+            <div className="pager">
+              <button className="btn ghost" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button>
+              <span className="muted">Page {page} of {data.pages}</span>
+              <button className="btn ghost" disabled={page >= data.pages} onClick={() => setPage(page + 1)}>Next</button>
+            </div>
+          )}
+        </div>
+        <aside className="mapwrap">
+          <MapView items={data.items} activeId={hover} />
+        </aside>
       </section>
     </>
   );

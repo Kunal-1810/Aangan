@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../auth.js';
+import LocationPicker from '../components/LocationPicker.jsx';
 
-const init = { title: '', listingType: 'rent', propertyType: 'apartment', price: '', bedrooms: 2, bathrooms: 1, areaSqft: '', furnished: 'unfurnished', city: '', locality: '', images: '', description: '' };
+const init = { title: '', listingType: 'rent', propertyType: 'apartment', price: '', bedrooms: 2, bathrooms: 1, areaSqft: '', furnished: 'unfurnished', city: '', locality: '', images: '', description: '', lat: '', lng: '' };
 
 export default function PostProperty() {
   const { user, ready } = useAuth();
@@ -29,7 +30,9 @@ export default function PostProperty() {
           bedrooms: Number(f.bedrooms),
           bathrooms: Number(f.bathrooms),
           areaSqft: Number(f.areaSqft) || undefined,
-          images: f.images.split(',').map(s => s.trim()).filter(Boolean)
+          images: f.images.split(',').map(s => s.trim()).filter(Boolean),
+          lat: f.lat === '' ? undefined : f.lat,
+          lng: f.lng === '' ? undefined : f.lng
         }
       });
       nav('/');
@@ -63,6 +66,11 @@ export default function PostProperty() {
           <select value={f.furnished} onChange={set('furnished')}><option value="furnished">Furnished</option><option value="semi">Semi-furnished</option><option value="unfurnished">Unfurnished</option></select>
         </label>
       </div>
+      <LocationPicker
+        value={f.lat === '' ? null : { lat: f.lat, lng: f.lng }}
+        onPick={({ lat, lng }) => setF(s => ({ ...s, lat, lng }))}
+        query={[f.locality, f.city].filter(Boolean).join(', ')}
+      />
       {T('images', 'Image links (comma separated)', { placeholder: 'https://…' })}
       <label>Description<textarea rows="4" value={f.description} onChange={set('description')} /></label>
       {err && <p className="error" role="alert">{err}</p>}

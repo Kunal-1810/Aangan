@@ -23,9 +23,19 @@ const propertySchema = new Schema({
   city: { type: String, required: true, trim: true, index: true },
   locality: String,
   images: [String],
+  lat: { type: Number, min: -90, max: 90 },
+  lng: { type: Number, min: -180, max: 180 },
   status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'approved' },
   views: { type: Number, default: 0 }
 }, { timestamps: true });
 
 export const User = models.User || model('User', userSchema);
 export const Property = models.Property || model('Property', propertySchema);
+
+const inquirySchema = new Schema({
+  property: { type: Schema.Types.ObjectId, ref: 'Property', required: true, index: true },
+  sender: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  message: { type: String, required: true, maxlength: 1000 }
+}, { timestamps: true });
+
+export const Inquiry = models.Inquiry || model('Inquiry', inquirySchema);
