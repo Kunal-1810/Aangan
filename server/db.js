@@ -5,8 +5,18 @@ const cache = globalThis._mongoose || (globalThis._mongoose = { conn: null, prom
 
 export async function connectDB() {
   if (cache.conn) return cache.conn;
-  if (!process.env.MONGODB_URI) throw new Error('MONGODB_URI is not set');
-  cache.promise ||= mongoose.connect(process.env.MONGODB_URI, { bufferCommands: false });
+
+  const uri = process.env.MONGODB_URI;
+  if (!uri) throw new Error('MONGODB_URI is not set');
+
+  if (!cache.promise) {
+    cache.promise = mongoose
+      .connect(uri, { bufferCommands: false })
+      .catch((err) => {
+        cache.promise = null; // allow retry on next request
+        throw err;
+      });
+  }
   cache.conn = await cache.promise;
   return cache.conn;
 }
