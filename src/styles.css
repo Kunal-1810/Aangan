@@ -61,6 +61,23 @@ textarea { padding: 12px 16px; }
 .picker-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
 @media (max-width: 960px) { .layout { grid-template-columns: 1fr; } .mapwrap { position: static; } .map { height: 340px; min-height: 0; } }
 
+.pin {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  background: #fff;
+  color: #222;
+  padding: 2px 8px;
+  border-radius: 12px;
+  border: 1px solid #999;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 1px 4px rgba(0,0,0,.3);
+}
+.pin.on { background: #e11d48; color: #fff; border-color: #e11d48; }
+.map { height: 500px; width: 100%; }
+.map.small { height: 300px; }
+
 /* Property detail */
 .back { display: inline-block; padding: 8px 40px; }
 .pad { padding: 24px 40px; }
